@@ -216,16 +216,15 @@ class PushVelTrainer:
             temp = temp.to(local_rank()).float()
             vel = vel.to(local_rank()).float()
             dfun = dfun.to(local_rank()).float()
+            temp_label = temp_label.to(local_rank()).float()
+            vel_label = vel_label.to(local_rank()).float()   
 
             # val doesn't apply push-forward
-            if time is not None:
-                temp_label = temp_label[:, 0].to(local_rank()).float()
-                vel_label = vel_label[:, 0].to(local_rank()).float()    
-                coords = coords[:, 0]
-                temp = temp[:, 0]
-                vel = vel[:, 0]
-                dfun = dfun[:, 0]
-
+            if time is None:
+                coords, temp, vel, dfun = self._index_push(0, coords, temp, vel, dfun)
+                temp_label = temp_label[:, 0]
+                vel_label = vel_label[:, 0]
+            
             with torch.no_grad():
                 temp_pred, vel_pred = self._forward_int(coords, temp, vel, dfun, time)
                 temp_loss = F.mse_loss(temp_pred, temp_label)
